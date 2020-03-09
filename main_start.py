@@ -59,4 +59,4 @@ while True:
             uv4l.send_to_socket(temperature, feed_id)
     else:
         recovery_from_internet_disconnect_active = True
-    sleep(15)
+    sleep(28)
