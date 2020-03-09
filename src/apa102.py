@@ -20,8 +20,8 @@ MIN_BRIGHTNESS = 225
 MAX_BRIGHTNESS = 255
 
 def led_color(brightness, color):
-    # brightness can be set at two places which
-    # results in a much better fading experience
+    # brightness can be set at two places. This results in a much better fading experience.
+    # The first parameter (a) has a range from 225 - 255 and the second parameter (b) has a range from 1 - 255
     a = brightness
     b = 1 + (brightness-MIN_BRIGHTNESS)
     if color == "off":
