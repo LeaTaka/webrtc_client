@@ -39,8 +39,8 @@ while True:
         # after an internet disconnect, a room and pin still exist.
         # Making sure below that this data is used for a reconnect.
         if button.s_streaming and recovery_from_internet_disconnect_active:
-            orphaned_room = s_streaming["room"]
-            orphaned_pin = s_streaming["pin"]
+            orphaned_room = button.s_streaming["room"]
+            orphaned_pin = button.s_streaming["pin"]
             print('We have an orphaned room ({}) with pin {}, available on this session'.format(orphaned_room, orphaned_pin))
             # try to reconnect with the previous created room & pin
             button.s_streaming = uv4l.start_streaming(button.AUTH_TOKEN, button.PI_SERIAL, button.DISPLAY_NAME, orphaned_room, orphaned_pin)
