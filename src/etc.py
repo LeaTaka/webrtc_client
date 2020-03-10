@@ -14,9 +14,10 @@ cfg = json.load(open('cfg.json'))
 # Check if the internet connection is down by sending a single ping to Google each iteration
 def internet_connection_is_up():
     if subprocess.call("ping -c 1 8.8.8.8 > /dev/null 2>&1", shell=True) == 0:
+        apa102.led_set("off", "off", "off")
         return True
     else:
-        print('Internet connection is down! Trying to reconnect ... .   .      .           .')
+        print('Internet connection is down! Trying to connect ... .   .      .           .')
         apa102.led_set("off", "magenta", "off")
         return False
 

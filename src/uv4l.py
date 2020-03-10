@@ -46,15 +46,15 @@ def send_to_socket(temp, feed_id):
 
 
 # check if a uv4l process is active
-def status():
+def processes():
     return subprocess.run(["pidof uv4l"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.strip()
 
 
 # destroy all multiple uv4l processes
 def destroy_uv4l_processes_if_any():
     try:
-        if status():
-            print('Terminating uv4l PID {0} through shell...'.format(status()))
+        if processes():
+            print('Terminating uv4l PID {0} through shell...'.format(processes()))
             data = '{"what": "destroy", "plugin": "videoroom","transaction": ""}'
             response = requests.post(cfg['url_uv4l'], headers=headers, data=data,
                                      verify='cert/server.pem')
@@ -95,8 +95,8 @@ def start_processes():
 
 
 # prepare uv4l settings with the secret information, which provides access to the janus server
-def set_token(auth_token):
-    data = '{"gateway":{"apisecret":"","auth_token":"' + auth_token + '","root":"/janus","url":"' + cfg[
+def set_token():
+    data = '{"gateway":{"apisecret":"","auth_token":"' + button.AUTH_TOKEN + '","root":"/janus","url":"' + cfg[
         'url_janus'] + '"},"http_proxy":{"host":"","non_proxy_hosts_regex":"","password":"","port":80,"user":""},' \
                        '"session":{"reconnect_delay_s":3,"reconnect_on_failure":true},"videoroom":{"as_listener":{' \
                        '"audio":false,"data":false,"video":false},"as_publisher":{' \
@@ -139,8 +139,7 @@ def subscribe_media(transaction_id):
 
 
 # wrapper function that includes all functions required to start streaming
-def start_streaming(auth_token=button.AUTH_TOKEN, pi_serial=button.PI_SERIAL, DISPLAY_NAME=button.DISPLAY_NAME,
-                    orphaned_room=0, orphaned_pin=''):
+def start_streaming(orphaned_room=0, orphaned_pin=''):
     # for each session we create unique id's
     transaction_id = etc.random_generator(40)
     feed_id = ''.join(filter(str.isdigit, transaction_id))
@@ -150,16 +149,20 @@ def start_streaming(auth_token=button.AUTH_TOKEN, pi_serial=button.PI_SERIAL, DI
     # fire up uv4l processes
     start_processes()
     # set the secret token for acquiring access to the janus server
-    set_token(auth_token)
+    set_token()
     # some logging for journalctl
-    print('Serial#         = {0}'.format(pi_serial))
+    print('Serial#         = {0}'.format(button.PI_SERIAL))
     print('Transaction_id  = {0}'.format(transaction_id))
     print('Feed_id         = {0}'.format(feed_id))
 
     # initiate session & videoroom plugin
     session = session_start(transaction_id)
-    session_id = session["session_id"]
-    plugin_id = session["plugin_id"]
+    if session:
+        session_id = session["session_id"]
+        plugin_id = session["plugin_id"]
+    else:
+        # there was a big error, we will quit the wrapper function
+        return False
 
     print('Create session  = Success')
     print('Sessionid       = {0}'.format(session_id))
@@ -168,15 +171,16 @@ def start_streaming(auth_token=button.AUTH_TOKEN, pi_serial=button.PI_SERIAL, DI
     # in case of an orphaned room and pin, for example after an internet disconnect,
     # no new room will be created and the existing room and pin will be recycled.
     if orphaned_room == 0 and orphaned_pin == '':
-        room = janus.select_room_number(feed_id, transaction_id, auth_token, session_id, plugin_id)
-        pin = janus.create_room(feed_id, transaction_id, auth_token, session_id, plugin_id, room)
+        room = janus.select_room_number(feed_id, transaction_id, session_id, plugin_id)
+        pin = janus.create_room(feed_id, transaction_id, session_id, plugin_id, room)
     else:
         # apparently there is a reconnect and orphaned an room is available
         room = orphaned_room
         pin = orphaned_pin
 
     # join the room
-    janus.join_room(feed_id, transaction_id, auth_token, session_id, plugin_id, room, pin, DISPLAY_NAME, pi_serial)
+    if not janus.join_room(feed_id, transaction_id, session_id, plugin_id, room, pin):
+        return False
 
     # subscribe your media (cam or mic)
     if subscribe_media(transaction_id):
@@ -187,8 +191,26 @@ def start_streaming(auth_token=button.AUTH_TOKEN, pi_serial=button.PI_SERIAL, DI
         apa102.led_fade_out("green", "green", "green")
         apa102.led_set("off", "green", "off")
         return {'transaction_id': transaction_id, 'session_id': session_id, 'plugin_id': plugin_id, 'room': room,
-                'pin': pin, 'feed_id': feed_id, 'we_are_streaming': True}
+                'pin': pin, 'feed_id': feed_id}
     else:
         # in case of a big error (missing apitoken/secret)
         apa102.led_set("blue", "magenta", "blue")
         return False
+
+
+def retry_start_streaming(s_streaming, orphaned_room=0, orphaned_pin=''):
+    i = 1
+    while not s_streaming and i <= 5:
+        print("Trying to establish a streaming connection ... ")
+        s_streaming = start_streaming(orphaned_room, orphaned_pin)
+        if i == 5:
+            apa102.led_set("off", "red", "off", 255)
+            sleep(0.002)
+            apa102.led_set("off", "red", "off")
+            # we failed to join the room, so we terminate all uv4l processes
+            destroy_uv4l_processes_if_any()
+            break
+        sleep(1)
+        i += 1
+        pass
+    return s_streaming

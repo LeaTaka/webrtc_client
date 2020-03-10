@@ -2,7 +2,7 @@ import hashlib
 import sys
 import RPi.GPIO as GPIO
 from src import apa102, uv4l, janus, etc
-from time import time
+from time import time, sleep
 
 DISPLAY_NAME = "LeasCrib"
 PI_SERIAL = etc.pi_serial()
@@ -26,18 +26,16 @@ def on_pull(channel):
                 if GPIO.input(channel) == 1:
                     # try to check if there is a uv4l process open on the raspberry pi
                     try:
-                        if not uv4l.status():
+                        if not uv4l.processes():
                             # if no process is open, a stream can be started
-                            s_streaming = uv4l.start_streaming(AUTH_TOKEN, PI_SERIAL, DISPLAY_NAME)
-                            # in case of error, continue to try establishing a stream
-                            while not s_streaming:
-                                print("Trying to establishing a connection ... ")
-                                pass
+                            s_streaming = uv4l.start_streaming()
+                            # in case of failure, continue trying to establish a stream for 5 times
+                            s_streaming = uv4l.retry_start_streaming(s_streaming)
                         else:
                             # if a uv4l process is open, and a pull up after a push of a button has occurred, then
-                            # appearantly the user wishes to close the connection. This is what we do here:
+                            # apparently the user wishes to close the connection. This is what we do here:
                             apa102.led_set("blue", "blue", "blue")
-                            s_streaming = janus.unpublish_media(s_streaming["transaction_id"], AUTH_TOKEN,
+                            s_streaming = janus.unpublish_media(s_streaming["transaction_id"],
                                                                 s_streaming["session_id"], s_streaming["plugin_id"],
                                                                 s_streaming["room"])
                             apa102.led_set("off", "off", "off")
