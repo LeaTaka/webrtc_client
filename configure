@@ -232,11 +232,12 @@ echo -e "\e[38;5;${COLOR}m${h}\e[0m";
 sudo bash -c 'cat > /etc/systemd/system/lea.service' << EOF
 [Unit]
 Description=Respeaker babyMonitorServices. Boot
-After=multi-user.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-Type=idle
-Environment="OPENSSL_CONF=/home/pi/webrtcClient/cert/openssl.cnf"
+Type=simple
+Environment="OPENSSL_CONF=/home/pi/webrtc_client/cert/openssl.cnf"
 Restart=on-failure
 ExecStart=/usr/bin/python3 -u /home/pi/webrtc_client/main_start.py
 PrivateTmp=false
@@ -253,11 +254,12 @@ sudo systemctl enable lea.service
 sudo bash -c 'cat > /etc/systemd/system/leaM.service' << EOF
 [Unit]
 Description=Respeaker babyMonitorServices. Manual
-After=multi-user.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-Type=oneshot
-Environment="OPENSSL_CONF=/home/pi/webrtcClient/cert/openssl.cnf"
+Type=simple
+Environment="OPENSSL_CONF=/home/pi/webrtc_client/cert/openssl.cnf"
 ExecStart=/usr/bin/python3 -u /home/pi/webrtc_client/main_start.py start
 RemainAfterExit=true
 

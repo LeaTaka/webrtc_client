@@ -1,5 +1,0 @@
-{
-"temperature": false,
-"url_uv4l": "https://localhost:8889/api/janus/client",
-"url_janus": "https://www.jasconcept.com:8089/janus"
-}

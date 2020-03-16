@@ -27,10 +27,9 @@ def on_pull(channel):
                     # try to check if there is a uv4l process open on the raspberry pi
                     try:
                         if not uv4l.processes():
-                            # if no process is open, a stream can be started
-                            s_streaming = uv4l.start_streaming()
-                            # in case of failure, continue trying to establish a stream for 5 times
-                            s_streaming = uv4l.retry_start_streaming(s_streaming)
+                            # if no process is open, a stream can be started.
+                            # Continue trying to establish a stream for 5 times
+                            s_streaming = uv4l.try_start_streaming()
                         else:
                             # if a uv4l process is open, and a pull up after a push of a button has occurred, then
                             # apparently the user wishes to close the connection. This is what we do here:

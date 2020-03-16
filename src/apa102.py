@@ -16,14 +16,16 @@ import spidev
 spi = spidev.SpiDev()
 spi.open(0, 1)
 
+all_led_enabled = True
 MIN_BRIGHTNESS = 225
 MAX_BRIGHTNESS = 255
+
 
 def led_color(brightness, color):
     # brightness can be set at two places. This results in a much better fading experience.
     # The first parameter (a) has a range from 225 - 255 and the second parameter (b) has a range from 1 - 255
     a = brightness
-    b = 1 + (brightness-MIN_BRIGHTNESS)
+    b = 1 + (brightness - MIN_BRIGHTNESS)
     if color == "off":
         spi.xfer([a, 0, 0, 0])
     elif color == "red":
@@ -51,11 +53,12 @@ def led_end():
 
 
 def led_set(led_1="off", led_2="off", led_3="off", brightness=225):
-    led_init()
-    led_color(brightness, led_1)
-    led_color(brightness, led_2)
-    led_color(brightness, led_3)
-    led_end()
+    if all_led_enabled:
+        led_init()
+        led_color(brightness, led_1)
+        led_color(brightness, led_2)
+        led_color(brightness, led_3)
+        led_end()
 
 
 def led_fade_in(led_1="green", led_2="green", led_3="green"):

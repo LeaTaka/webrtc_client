@@ -96,8 +96,9 @@ def start_processes():
 
 # prepare uv4l settings with the secret information, which provides access to the janus server
 def set_token():
-    data = '{"gateway":{"apisecret":"","auth_token":"' + button.AUTH_TOKEN + '","root":"/janus","url":"' + cfg[
-        'url_janus'] + '"},"http_proxy":{"host":"","non_proxy_hosts_regex":"","password":"","port":80,"user":""},' \
+    data = '{"gateway":{"apisecret":"",' \
+                       '"auth_token":"' + button.AUTH_TOKEN + '","root":"/janus","url":"' + cfg['url_janus'] + '"},' \
+                       '"http_proxy":{"host":"","non_proxy_hosts_regex":"","password":"","port":80,"user":""},' \
                        '"session":{"reconnect_delay_s":3,"reconnect_on_failure":true},"videoroom":{"as_listener":{' \
                        '"audio":false,"data":false,"video":false},"as_publisher":{' \
                        '"adjust_max_bitrate_for_hardware_videocodec":true,"audio":true,"data":true,' \
@@ -198,7 +199,7 @@ def start_streaming(orphaned_room=0, orphaned_pin=''):
         return False
 
 
-def retry_start_streaming(s_streaming, orphaned_room=0, orphaned_pin=''):
+def try_start_streaming(s_streaming=False, orphaned_room=0, orphaned_pin=''):
     i = 1
     while not s_streaming and i <= 5:
         print("Trying to establish a streaming connection ... ")

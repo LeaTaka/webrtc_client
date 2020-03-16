@@ -4,7 +4,7 @@ import sys
 import RPi.GPIO as GPIO
 import requests
 from time import sleep
-from src import apa102, uv4l, janus, etc, button
+from src import apa102, uv4l, etc, button
 from requests.packages.urllib3.exceptions import SubjectAltNameWarning
 # Disable warnings for SecurityWarning: Certificate has no `subjectAltName`, RFC 2818
 requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
@@ -20,11 +20,11 @@ GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.add_event_detect(17, GPIO.FALLING, callback=button.on_pull, bouncetime=200)
 
 # manual start through leaM.service
-try:
+if len(sys.argv) > 1:
     if sys.argv[1] == "start":
+        apa102.all_led_enabled = False
+        s_streaming = uv4l.try_start_streaming()
         print("Fantastic!! Go Go Gadget Manual .. !")
-except:
-    pass
 
 
 # initiate infinite loop
@@ -41,10 +41,9 @@ while True:
             orphaned_room = button.s_streaming["room"]
             orphaned_pin = button.s_streaming["pin"]
             print('We have an orphaned room ({}) with pin {}, available on this session'.format(orphaned_room, orphaned_pin))
-            # try to reconnect with the previous created room & pin
-            button.s_streaming = uv4l.start_streaming(orphaned_room, orphaned_pin)
+            # try to reconnect with the previous created room & pin,
             # in case of failure, continue trying to establish a stream for 5 times
-            button.s_streaming = uv4l.retry_start_streaming(button.s_streaming, orphaned_room, orphaned_pin)
+            button.s_streaming = uv4l.try_start_streaming(button.s_streaming, orphaned_room, orphaned_pin)
             apa102.led_set("off", "off", "off")
         if recovery_from_internet_disconnect_active:
             print("System is back online ㋡")
