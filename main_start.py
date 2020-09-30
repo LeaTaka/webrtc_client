@@ -19,7 +19,7 @@ while True:
     status = button.requested_status
     internet = utils.internet_connection_is_up()
 
-    print(f"Device set to be: {status}" )
+    # print(f"Device set to be: {status}" )
 
     connection_manager.ensure_status(status, internet)
 

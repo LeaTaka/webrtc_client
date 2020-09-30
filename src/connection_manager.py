@@ -1,7 +1,7 @@
-from cfg import Cfg
 from src import apa102
 from src.uv4l import Uv4l
 from src.janus import Janus
+from src.cfg import Cfg
 
 
 class ConnectionManager:
@@ -12,7 +12,7 @@ class ConnectionManager:
 
     def ensure_status(self, status, internet):
 
-        print(f"internet: {internet}, uv4l: {self.dummy_uv4l.status}, janus: {self.dummy_janus.status}")
+        # print(f"internet: {internet}, uv4l: {self.dummy_uv4l.status}, janus: {self.dummy_janus.status}")
 
         if self.recover and internet:
             print(f"recovering with settings: {str(Cfg.dict)}")

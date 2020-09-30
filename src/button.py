@@ -1,5 +1,5 @@
 from time import time
-from src import connection_manager
+from src import apa102, utils
 import RPi.GPIO as GPIO
 
 
@@ -13,8 +13,13 @@ class Button:
         while GPIO.input(channel) == 0:
             button_time = time() - start_time
             if 1 <= button_time <= 10:
+                apa102.led_set("blue", "blue", "blue")
                 if GPIO.input(channel) == 1:
                     if GPIO.input(channel) == 1 and self.requested_status == "disabled":
                         self.requested_status = "active"
                     elif GPIO.input(channel) == 1 and self.requested_status == "active":
                         self.requested_status = "disabled"
+            elif button_time > 10:
+                # reboot the system after having hold the button for longer than 10 seconds
+                apa102.led_set("white", "white", "white")
+                utils.shutdown()

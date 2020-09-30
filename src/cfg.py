@@ -1,12 +1,11 @@
 import hashlib
-from src import utils
 import subprocess
 
 class Cfg:
+
     # all uv4l and Janus settings created during setup of a stream
     dict = {}
 
-    # some more settings
     DISPLAY_NAME = "LeasCrib"
     TEMPERATURE = False
     URL_UV4L = "https://localhost:8889/api/janus/client"

@@ -1,15 +1,18 @@
-import os
-import sys
-import socket
-from src import apa102, utils
-from cfg import Cfg
-from time import sleep
 import json
+import os
+import socket
 import subprocess
+import sys
+from time import sleep
+
 import requests.packages.urllib3
+
+from src import apa102, utils
+from src.cfg import Cfg
 
 requests.packages.urllib3.disable_warnings()
 os.chdir(os.path.join('/home/pi/webrtc_client/'))
+
 
 class Uv4l:
     initial_status = "disabled"
@@ -26,7 +29,7 @@ class Uv4l:
                 # we failed to join the room, so we terminate all uv4l processes
                 self.stop()
                 break
-            sleep(1);
+            sleep(1)
             i += 1
             pass
 
@@ -61,50 +64,51 @@ class Uv4l:
 
     # start multiple uv4l processes with below configuration
     def start_processes(self):
-        subprocess.call("\
-        uv4l --auto-video_nr --driver dummy --frame-buffers=2 \
-        --server-option '–-bind-host-address=localhost' \
-        --server-option '--port=8889' \
-        --server-option '--use-ssl=yes' \
-        --server-option '--ssl-private-key-file=/home/pi/webrtc_client/cert/server.key' \
-        --server-option '--ssl-certificate-file=/home/pi/webrtc_client/cert/server.pem' \
-        --server-option '--enable-webrtc=yes' \
-        --server-option '--enable-webrtc-video=no' \
-        --server-option '--webrtc-receive-video=no' \
-        --server-option '--enable-webrtc-audio=yes' \
-        --server-option '--webrtc-receive-audio=no' \
-        --server-option '--webrtc-recdevice-index=3' \
-        --server-option '--webrtc-vad=yes' \
-        --server-option '--webrtc-echo-cancellation=yes' \
-        --server-option '--enable-webrtc-datachannels=yes' \
-        --server-option '--webrtc-datachannel-label=uv4l' \
-        --server-option '--webrtc-datachannel-socket=/tmp/uv4l.socket' \
-        --server-option '--janus-gateway-url=https://www.jasconcept.com:8089' \
-        ", shell=True)
+        UV4L_SETTINGS = "\
+            uv4l --auto-video_nr --driver dummy --frame-buffers=2 \
+            --server-option '–-bind-host-address=localhost' \
+            --server-option '--port=8889' \
+            --server-option '--use-ssl=yes' \
+            --server-option '--ssl-private-key-file=/home/pi/webrtc_client/cert/server.key' \
+            --server-option '--ssl-certificate-file=/home/pi/webrtc_client/cert/server.pem' \
+            --server-option '--enable-webrtc=yes' \
+            --server-option '--enable-webrtc-video=no' \
+            --server-option '--webrtc-receive-video=no' \
+            --server-option '--enable-webrtc-audio=yes' \
+            --server-option '--webrtc-receive-audio=no' \
+            --server-option '--webrtc-recdevice-index=3' \
+            --server-option '--webrtc-vad=yes' \
+            --server-option '--webrtc-echo-cancellation=yes' \
+            --server-option '--enable-webrtc-datachannels=yes' \
+            --server-option '--webrtc-datachannel-label=uv4l' \
+            --server-option '--webrtc-datachannel-socket=/tmp/uv4l.socket' \
+            --server-option '--janus-gateway-url=https://www.jasconcept.com:8089' \
+            "
+        subprocess.call(UV4L_SETTINGS, shell=True)
         sleep(0.5)  # uv4l needs some time to fire up its multiple processes ..
 
     # prepare uv4l settings with the secret information, which provides access to the janus server
     def set_token(self):
-        data = '{"gateway":{"apisecret":"",' \
-               '"auth_token":"' + Cfg.AUTH_TOKEN + '","root":"/janus","url":"' + Cfg.URL_JANUS + '"},' \
-                                                                                                '"http_proxy":{"host":"","non_proxy_hosts_regex":"","password":"","port":80,"user":""},' \
-                                                                                                '"session":{"reconnect_delay_s":3,"reconnect_on_failure":true},"videoroom":{"as_listener":{' \
-                                                                                                '"audio":false,"data":false,"video":false},"as_publisher":{' \
-                                                                                                '"adjust_max_bitrate_for_hardware_videocodec":true,"audio":true,"data":true,' \
-                                                                                                '"max_bitrate_bits":0,"rec_filename":"myrecording","record":false,' \
-                                                                                                '"use_hardware_videocodec":false,"video":true,"video_format_id":60},"audiocodec":"opus",' \
-                                                                                                '"fir_freq":0,"is_private":false,"max_bitrate_for_publishers_bits":128000,"max_listeners":3,' \
-                                                                                                '"max_publishers":6,"permanent":false,"rec_dir":"/usr/share/janus/recordings/","record":false,' \
-                                                                                                '"room":1234,"room_description":"","room_pin":"","room_secret":"","username":"",' \
-                                                                                                '"videocodec":"vp8"}} '
-        response = requests.put(Cfg.URL_UV4L + "/settings", headers=Cfg.HEADERS, data=data,
+        DATA_UV4L_SET_TOKEN = '{"gateway":{"apisecret":"",' \
+                            '"auth_token":"' + Cfg.AUTH_TOKEN + '","root":"/janus","url":"' + Cfg.URL_JANUS + '"},' \
+                            '"http_proxy":{"host":"","non_proxy_hosts_regex":"","password":"","port":80,"user":""},' \
+                            '"session":{"reconnect_delay_s":3,"reconnect_on_failure":true},"videoroom":{"as_listener":{' \
+                            '"audio":false,"data":false,"video":false},"as_publisher":{' \
+                            '"adjust_max_bitrate_for_hardware_videocodec":true,"audio":true,"data":true,' \
+                            '"max_bitrate_bits":0,"rec_filename":"myrecording","record":false,' \
+                            '"use_hardware_videocodec":false,"video":true,"video_format_id":60},"audiocodec":"opus",' \
+                            '"fir_freq":0,"is_private":false,"max_bitrate_for_publishers_bits":128000,"max_listeners":3,' \
+                            '"max_publishers":6,"permanent":false,"rec_dir":"/usr/share/janus/recordings/","record":false,' \
+                            '"room":1234,"room_description":"","room_pin":"","room_secret":"","username":"",' \
+                            '"videocodec":"vp8"}} '
+        response = requests.put(Cfg.URL_UV4L + "/settings", headers=Cfg.HEADERS, data=DATA_UV4L_SET_TOKEN,
                                 verify='cert/server.pem')
         result = json.loads(response.content.decode('ascii'))
         print('Uv4l settings   = {0}'.format(result["response"]["reason"]))
 
     def session_start(self):
-        data = '{"what": "create", "plugin": "videoroom", "transaction": "' + Cfg.dict["transaction_id"] + '"}'
-        response = requests.post(Cfg.URL_UV4L, headers=Cfg.HEADERS, data=data, verify='cert/server.pem')
+        DATA_UV4L_SESSION_START = '{"what": "create", "plugin": "videoroom", "transaction": "' + Cfg.dict["transaction_id"] + '"}'
+        response = requests.post(Cfg.URL_UV4L, headers=Cfg.HEADERS, data=DATA_UV4L_SESSION_START, verify='cert/server.pem')
         result = json.loads(response.content.decode('ascii'))
 
         if result["what"] == 'error':
@@ -117,8 +121,8 @@ class Uv4l:
             return True
 
     def subscribe_media(self):
-        data = '{"what": "publish", "transaction": "' + Cfg.dict["transaction_id"] + '", "body": {"audio": true, "video": false, "data": true, "adjust_max_bitrate_for_hardware_videocodec": true, "max_bitrate_bits": 0, "use_hardware_videocodec": false, "video_format_id": 60, "record": false, "rec_filename": "myrecording"}}'
-        response = requests.post(Cfg.URL_UV4L + "/videoroom", headers=Cfg.HEADERS, data=data, verify='cert/server.pem')
+        DATA_UV4L_SUBSCRIBE_MEDIA = '{"what": "publish", "transaction": "' + Cfg.dict["transaction_id"] + '", "body": {"audio": true, "video": false, "data": true, "adjust_max_bitrate_for_hardware_videocodec": true, "max_bitrate_bits": 0, "use_hardware_videocodec": false, "video_format_id": 60, "record": false, "rec_filename": "myrecording"}}'
+        response = requests.post(Cfg.URL_UV4L + "/videoroom", headers=Cfg.HEADERS, data=DATA_UV4L_SUBSCRIBE_MEDIA, verify='cert/server.pem')
         result = json.loads(response.content.decode('ascii'))
         print('Subscribe media = {0}'.format(result["what"]))
         if result["what"] == 'ack':
@@ -169,9 +173,9 @@ class Uv4l:
     def stop(self):
         try:
             if self.check_for_processes():
+                DATA_UV4L_STOP = '{"what": "destroy", "plugin": "videoroom","transaction": ""}'
                 print('Terminating uv4l PID {0} through shell...'.format(self.check_for_processes()))
-                data = '{"what": "destroy", "plugin": "videoroom","transaction": ""}'
-                response = requests.post(Cfg.URL_UV4L, headers=Cfg.HEADERS, data=data,
+                response = requests.post(Cfg.URL_UV4L, headers=Cfg.HEADERS, data=DATA_UV4L_STOP,
                                          verify='cert/server.pem')
                 result = json.loads(response.content.decode('ascii'))
                 if result["what"] == 'error':

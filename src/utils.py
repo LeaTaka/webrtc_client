@@ -1,10 +1,9 @@
-import hashlib
 import subprocess
 import random
 import string
 import os
 from w1thermsensor import W1ThermSensor as w1
-from cfg import Cfg
+from src.cfg import Cfg
 from src import apa102
 
 os.chdir(os.path.join('/home/pi/webrtc_client/'))
