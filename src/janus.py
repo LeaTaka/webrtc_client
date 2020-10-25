@@ -1,68 +1,68 @@
 import json
 import os
 import sys
-
 import requests
-
 from src import utils
 from src.cfg import Cfg
+from src.uv4l import Uv4l
 
 os.chdir(os.path.join('/home/pi/webrtc_client/'))
-
 
 class Janus:
     initial_status = "disabled"
     status = initial_status
     counter = 0
+    uv4l = Uv4l()
 
     # choose a random room number and check if it exists, continue until a unique number is found
     def select_room_number(self):
-        DATA_JANUS_SELECT_ROOM_NUMBER = '{"janus": "message", "transaction": "' + Cfg.dict["transaction_id"] + '", "token": "' + Cfg.AUTH_TOKEN + '", "body": {"request": "list"}}'
         response = requests.post(
-            Cfg.URL_JANUS + "/" + Cfg.dict["session_id"] + "/" + Cfg.dict["plugin_id"],
-            headers=Cfg.HEADERS, data=DATA_JANUS_SELECT_ROOM_NUMBER, verify=True)
+            Cfg.URL_JANUS + "/" + self.uv4l.cfg.SESSION_ID + "/" + self.uv4l.cfg.PLUGIN_ID,
+            headers=Cfg.HEADERS,
+            data=self.uv4l.cfg.janus_select_room_number(),
+            verify=True)
         result = json.loads(response.content.decode('ascii'))
         rooms = [(list['room']) for list in result["plugindata"]["data"]["list"]]
         print('Number of rooms = {}'.format(len(rooms)))
-        print('Available rooms = {0}'.format(str(rooms)[1:-1]))
-        Cfg.dict["room"] = (Cfg.dict["feed_id"].strip("0") * 5)[:5]
+        # print('Active rooms    = {0}'.format(str(rooms)[1:-1]))
+        self.uv4l.cfg.room = (self.uv4l.cfg.FEED_ID.strip("0") * 5)[:5]
         while True:
-            if Cfg.dict["room"] in set(rooms):
-                Cfg.dict["room"] = int(utils.random_generator(5, "1234567890").strip("0"))
+            if self.uv4l.cfg.room in set(rooms):
+                self.uv4l.cfg.room = int(utils.random_generator(5, "1234567890").strip("0"))
                 continue
             else:
-                return str(Cfg.dict["room"])
+                return str(self.uv4l.cfg.room)
 
     def create_room(self):
-        Cfg.dict["pin"] = (Cfg.dict["feed_id"].strip("0") * 4)[-4:]
-        DATA_JANUS_CREATE_ROOM = '{"janus": "message", "transaction": "' + Cfg.dict["transaction_id"] + '", "token": "' + Cfg.AUTH_TOKEN + '", "body": {"request": "create", "audiocodec": "opus", "bitrate": 128000, "description": "Pretty room", "fir_freq": 10, "notify_joining": false, "record": false, "require_pvtid": false, "room": ' + Cfg.dict["room"] + ', "pin": "' + Cfg.dict["pin"] + '", "videocodec": "h264", "audiolevel_event": true, "audio_active_packets": 100, "audio_level_average": 25}}'
-        response = requests.post(Cfg.URL_JANUS + "/" + Cfg.dict["session_id"] + "/" + Cfg.dict["plugin_id"], headers=Cfg.HEADERS, data=DATA_JANUS_CREATE_ROOM, verify=True)
+        self.uv4l.cfg.pin = (self.uv4l.cfg.FEED_ID.strip("0") * 4)[-4:]
+        response = requests.post(
+            Cfg.URL_JANUS + "/" + self.uv4l.cfg.SESSION_ID + "/" + self.uv4l.cfg.PLUGIN_ID,
+             headers=Cfg.HEADERS,
+             data=self.uv4l.cfg.janus_create_room(),
+             verify=True)
         result = json.loads(response.content.decode('ascii'))
-        print(result)
         if result["plugindata"]["data"]["videoroom"] == "event":
             print(result["plugindata"]["data"]["error"])
             return False
         else:
-            print('Room created    = success ({0} / {1})'.format(Cfg.dict["room"],
-                                                                 Cfg.dict["pin"]))
-            return Cfg.dict["pin"]
+            print('Room created    = success ({0} / {1})'.format(self.uv4l.cfg.room,
+                                                                 self.uv4l.cfg.pin))
+            return self.uv4l.cfg.pin
 
     def join_room(self):
-        if 'room' and 'pin' not in Cfg.dict.keys():
-            Cfg.dict["room"] = self.select_room_number()
-            Cfg.dict["pin"] = self.create_room()
-
-        AUTH_STRING = '{{\\"display_name\\":\\"{0}\\",\\"pi_serial\\":\\"{1}\\",\\"room\\":\\"{2}\\",\\"pin\\":\\"{3}\\"}}'.format(Cfg.DISPLAY_NAME, Cfg.PI_SERIAL, Cfg.dict["room"], Cfg.dict["pin"])
-        DATA_JANUS_JOIN_ROOM = '{"janus": "message", "transaction": "' + Cfg.dict["transaction_id"] + '", "token": "' + Cfg.AUTH_TOKEN + '", "body": {"request": "join", "ptype": "publisher", "room": ' + Cfg.dict["room"] + ', "pin": "' + Cfg.dict["pin"] + '", "id": ' + Cfg.dict["feed_id"] + ', "display": "' + AUTH_STRING + '"}}'
-
+        if not self.uv4l.cfg.room and not self.uv4l.cfg.pin:
+            self.uv4l.cfg.room = self.select_room_number()
+            self.uv4l.cfg.pin = self.create_room()
         response = requests.post(
-            Cfg.URL_JANUS + "/" + Cfg.dict["session_id"] + "/" + Cfg.dict["plugin_id"],
-            headers=Cfg.HEADERS, data=DATA_JANUS_JOIN_ROOM, verify=True)
+            Cfg.URL_JANUS + "/" + self.uv4l.cfg.SESSION_ID + "/" + self.uv4l.cfg.PLUGIN_ID,
+            headers=Cfg.HEADERS,
+            data=self.uv4l.cfg.janus_join_room(),
+            verify=True)
         result = json.loads(response.content.decode('ascii'))
 
         if result["janus"] == "ack":
-            print('Join room       = {0} ({1} / {2})'.format(result["janus"], Cfg.dict["room"],
-                                                             Cfg.dict["pin"]))
+            print('Join room       = {0} ({1} / {2})'.format(
+                result["janus"], self.uv4l.cfg.room, self.uv4l.cfg.pin))
             self.status = "active"
             return True
         else:
@@ -74,10 +74,11 @@ class Janus:
 
     def stop(self):  # remove your media from the stream
         try:
-            DATA_JANUS_STOP = '{"janus":"message","transaction":"' + Cfg.dict["transaction_id"] + '","token":"' + Cfg.AUTH_TOKEN + '","body":{"request":"unpublish"}}'
             response = requests.post(
-                Cfg.URL_JANUS + "/" + Cfg.dict["session_id"] + "/" + Cfg.dict["plugin_id"],
-                headers=Cfg.HEADERS, data=DATA_JANUS_STOP, verify=True)
+                Cfg.URL_JANUS + "/" + self.uv4l.cfg.SESSION_ID + "/" + self.uv4l.cfg.PLUGIN_ID,
+                headers=Cfg.HEADERS,
+                data=self.uv4l.cfg.janus_stop(),
+                verify=True)
             result = json.loads(response.content.decode('ascii'))
             print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
             if result["janus"] == 'error':
@@ -96,16 +97,15 @@ class Janus:
     # clean up, so no orphaned rooms will exist
     def destroy_room(self):
         try:
-            DATA_JANUS_DESTROY_ROOM = '{"janus": "message", "transaction": "' + Cfg.dict["transaction_id"] + '", "token": "' + Cfg.AUTH_TOKEN + '", "body": {"request": "destroy", "room": ' + Cfg.dict["room"] + '}}'
             response = requests.post(
-                Cfg.URL_JANUS + "/" + Cfg.dict["session_id"] + "/" + Cfg.dict["plugin_id"],
-                headers=Cfg.HEADERS, data=DATA_JANUS_DESTROY_ROOM, verify=True)
+                Cfg.URL_JANUS + "/" + self.uv4l.cfg.SESSION_ID + "/" + self.uv4l.cfg.PLUGIN_ID,
+                headers=Cfg.HEADERS, data=self.uv4l.cfg.janus_destroy_room(), verify=True)
             result = json.loads(response.content.decode('ascii'))
             if result["janus"] == 'error':
                 print(result["error"]["reason"])
                 return False
             else:
-                print('Destroy room    = {0} ({1})'.format(result["janus"], Cfg.dict["room"]))
+                print('Destroy room    = {0} ({1})'.format(result["janus"], self.uv4l.cfg.room))
                 return True
         except OSError as e:
             print(sys.stderr, "Destroy room failed:", e)

@@ -7,25 +7,25 @@ from src.cfg import Cfg
 class ConnectionManager:
     recover = None
 
-    dummy_uv4l = Uv4l()
-    dummy_janus = Janus()
+    uv4l = Uv4l()
+    janus = Janus()
 
     def ensure_status(self, status, internet):
 
         # print(f"internet: {internet}, uv4l: {self.dummy_uv4l.status}, janus: {self.dummy_janus.status}")
 
         if self.recover and internet:
-            print(f"recovering with settings: {str(Cfg.dict)}")
-            self.dummy_uv4l.setup()
-            self.dummy_janus.join_room()
-            self.dummy_uv4l.subscribe_media()
+            print(f"recovering with room: {str(self.uv4l.cfg.room)}")
+            self.uv4l.setup()
+            self.janus.join_room()
+            self.uv4l.subscribe_media()
             self.recover = False
 
         elif status == "active" and internet:
-            if self.dummy_uv4l.status == "disabled":
-                self.dummy_uv4l.setup()
-                self.dummy_janus.join_room()
-                self.dummy_uv4l.subscribe_media()
+            if self.uv4l.status == "disabled":
+                self.uv4l.setup()
+                self.janus.join_room()
+                self.uv4l.subscribe_media()
 
         elif status == "active" and not internet:
             print("waiting for internet")
@@ -33,7 +33,7 @@ class ConnectionManager:
             apa102.led_set("blue", "blue", "blue")
 
         else:
-            if self.dummy_janus.status == "active":
-                self.dummy_janus.stop()
-            if self.dummy_uv4l.status == "active":
-                self.dummy_uv4l.stop()
+            if self.janus.status == "active":
+                self.janus.stop()
+            if self.uv4l.status == "active":
+                self.uv4l.stop()
