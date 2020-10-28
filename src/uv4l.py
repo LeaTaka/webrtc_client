@@ -11,6 +11,7 @@ from src.cfg import Cfg
 requests.packages.urllib3.disable_warnings()
 os.chdir(os.path.join('/home/pi/webrtc_client/'))
 
+
 class Uv4l:
     cfg = Cfg()
     initial_status = "disabled"
@@ -54,7 +55,8 @@ class Uv4l:
 
     # check if a uv4l process is active
     def check_for_processes(self):
-        return subprocess.run(["pidof uv4l"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.strip()
+        return subprocess.run(["pidof uv4l"], stdout=subprocess.PIPE, universal_newlines=True,
+                              shell=True).stdout.strip()
 
     # start multiple uv4l processes with below configuration
     def start_processes(self):
@@ -71,6 +73,8 @@ class Uv4l:
         result = json.loads(response.content.decode('ascii'))
         print('Uv4l settings   = {0}'.format(result["response"]["reason"]))
 
+
+
     def session_start(self):
         response = requests.post(
             self.cfg.URL_UV4L,
@@ -78,6 +82,8 @@ class Uv4l:
             data=self.cfg.uv4l_session_start(),
             verify='cert/server.pem')
         result = json.loads(response.content.decode('ascii'))
+        # result = self.uv4lResponse(self.cfg.uv4l_session_start(), self.cfg)
+
         if result["what"] == 'error':
             print('Failed. {0}\nTerminating uv4l through shell...'.format(result["error"]["reason"]))
             subprocess.run(["sudo pkill uv4l"], shell=True)
@@ -104,41 +110,41 @@ class Uv4l:
             apa102.led_set("off", "green", "off")
             self.status = "active"
             # send to socket if facilitated
-            # self.send_to_socket()
+            self.send_to_socket()
             return True
         else:
             print("Error in subscribe_media_init (missing apitoken/secret?)")
             apa102.led_set("blue", "magenta", "blue")
             return False
 
-    # def send_to_socket(self):
-    #     if self.cfg.TEMPERATURE and self.status == "active":
-    #         # open socket only one time during session!!
-    #         while not self.create_socket_connection():
-    #             pass
-    #         apa102.led_set("off", "blue", "off")
-    #         data = '{"temp": "' + str(utils.get_temp()) + '", "id": "' + str(self.cfg.FEED_ID) + '"}'
-    #         print(data)
-    #         self.connection.send(str(data).encode())
-    #
-    # def create_socket_connection(self):
-    #     if self.cfg.TEMPERATURE:
-    #         socket_path = '/tmp/uv4l.socket'
-    #         try:
-    #             os.unlink(socket_path)
-    #         except:
-    #             if os.path.exists(socket_path):
-    #                 raise
-    #         s = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
-    #         print('Socket path: {0}'.format(socket_path))
-    #         s.bind(socket_path)
-    #         s.listen(1)
-    #         print('Awaiting socket connection...')
-    #         connection, client_address = s.accept()
-    #         print('Socket connected')
-    #         print('Established connection with client')
-    #         print(connection)
-    #         return connection
+    def send_to_socket(self):
+        if self.cfg.TEMPERATURE and self.status == "active":
+            # open socket only one time during session!!
+            while not self.create_socket_connection():
+                pass
+            apa102.led_set("off", "blue", "off")
+            data = '{"temp": "' + str(utils.get_temp()) + '", "id": "' + str(self.cfg.FEED_ID) + '"}'
+            print(data)
+            self.connection.send(str(data).encode())
+
+    def create_socket_connection(self):
+        if self.cfg.TEMPERATURE:
+            socket_path = '/tmp/uv4l.socket'
+            try:
+                os.unlink(socket_path)
+            except:
+                if os.path.exists(socket_path):
+                    raise
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+            print('Socket path: {0}'.format(socket_path))
+            s.bind(socket_path)
+            s.listen(1)
+            print('Awaiting socket connection...')
+            connection, client_address = s.accept()
+            print('Socket connected')
+            print('Established connection with client')
+            print(connection)
+            return connection
 
     def stop(self):
         try:

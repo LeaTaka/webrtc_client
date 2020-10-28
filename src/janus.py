@@ -86,7 +86,6 @@ class Janus:
             else:
                 print('Unpublish media = {0}'.format(result["janus"]))
             self.destroy_room()
-            Cfg.dict.clear()
             self.status = "disabled"
 
             # set s_streaming to False with output: no streaming sessions active and back to ready for start_processes()

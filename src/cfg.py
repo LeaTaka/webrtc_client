@@ -5,8 +5,6 @@ import random
 
 
 class Cfg:
-    # all uv4l and Janus settings created during setup of a stream
-    dict = {}
     # A random number is used for generating a transaction_id and feed_id
     DISPLAY_NAME = "LeasCrib"
     URL_UV4L = "https://localhost:8889/api/janus/client"
@@ -29,7 +27,7 @@ class Cfg:
     pin = None
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # UV4L SETTING FROM HERE                                                                                #
+    # UV4L SETTING                                                                                          #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     def uv4l_settings(self):
@@ -86,7 +84,7 @@ class Cfg:
         return '{"what": "destroy", "plugin": "videoroom","transaction": ""}'
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # JANUS SETTING FROM HERE                                                                               #
+    # JANUS SETTING                                                                                         #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     def janus_select_room_number(self):
