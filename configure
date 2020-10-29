@@ -129,96 +129,96 @@ sudo bash -c 'cat >> /boot/config.txt' << EOF
 # 1-wire settings
 dtoverlay=w1-gpio,gpiopin=12
 EOF
-#============================================================
-# Install the supercool RASPAP project
-# This will only be installed for raspberry pi zero w
-#============================================================
-COLOR=200
-STR="$(cat /proc/device-tree/model)"
-RPI0="Raspberry Pi Zero Rev"
-RPI0W="Raspberry Pi Zero W Rev"
-if case $STR in *$RPI0W*) true;; *) false;; esac; then
-  h="⚡ INSTALL RASPAP"
-  echo -e "\e[38;5;${COLOR}m${h}\e[0m";
-  sudo raspi-config nonint do_wifi_country NL
-  sudo curl -sL https://install.raspap.com | bash -s -- --yes
-
-  COLOR=200
-  h="⚡ RASPAP POST-CONFIGURATION FOR ENABLING SIMULTANIOUS AP & CLIENT CONFIG"
-  echo -e "\e[38;5;${COLOR}m${h}\e[0m";
-  ## Set managed mode (WifiAPEnable = 1)
-  COLOR=212
-  h="Enable managed mode in /etc/raspap/hostapd.ini"
-  echo -e "\e[38;5;${COLOR}m${h}\e";
-  sudo bash -c 'cat > /etc/raspap/hostapd.ini' << EOF
-LogEnable = 0
-WifiAPEnable = 1
-WifiManaged = wlan0
-EOF
-
-  ## Configure hostapd.conf
-  echo "Configure /etc/hostapd/hostapd.conf (SSID: LeaTaka / PASSW: changeme)"
-  sudo bash -c 'cat > /etc/hostapd/hostapd.conf' << EOF
-driver=nl80211
-ctrl_interface=/var/run/hostapd
-ctrl_interface_group=0
-auth_algs=1
-wpa_key_mgmt=WPA-PSK
-beacon_int=100
-ssid=LeaTaka
-channel=1
-hw_mode=g
-ieee80211n=0
-wpa_passphrase=changeme
-interface=uap0
-wpa=3
-wpa_pairwise=TKIP CCMP
-country_code=NL
-ignore_broadcast_ssid=0
-max_num_sta=5
-EOF
-
-  ## Configure dnsmasq
-  echo "Configure /etc/dnsmasq.conf"
-  sudo bash -c 'cat > /etc/dnsmasq.conf' << EOF
-interface=lo,uap0               # Enable uap0 interface for wireless client AP mode
-bind-interfaces                 # Bind to the interfaces
-server=8.8.8.8                  # Forward DNS requests to Google DNS
-domain-needed                   # Don't forward short names
-bogus-priv                      # Never forward addresses in the non-routed address spaces
-dhcp-range=10.3.141.50,10.3.141.255,255.255.255.0,12h
-EOF
-
-  ## Configure dhcpcd.conf
-  echo "Configure /etc/dhcpcd.conf"
-  sudo bash -c 'cat > /etc/dhcpcd.conf' << EOF
-# RaspAP uap0 configuration
-interface uap0
-static ip_address=192.168.50.1/24
-nohook wpa_supplicant
-EOF
-
-  ## Set webgui password to (changeme)
-  echo "Set webgui password to: changeme"
-  sudo bash -c 'cat > /etc/raspap/raspap.auth' << EOF
-admin
-\$2y\$10\$DxxAsfJQMxjzk/Erg6ay1O/k75b19279D4EW/YUesWyyPrMNEoaMa
-EOF
-  ## Set WifiClient list as default PHP page
-  echo "Set wifi client list as default PHP page"
-  sudo sed -z 's|default:\n\t\tDisplayDashboard|default:\n\t\tDisplayWPAConfig|' -i /var/www/html/index.php
-
-  ## Set new hostname for Pi Zero W
-  sudo raspi-config nonint do_hostname rpi0w
-  d="⚡ HOSTNAME raspberrypi.local HAS BEEN CHANGED TO rpi0w.local"
-  echo -e "\e[38;5;${COLOR}m${h}\e[0m";
-elif case $STR in *$RPI0*) true;; *) false;; esac; then
-  ## Set new hostname for Pi Zero
-  sudo raspi-config nonint do_hostname rpi0
-  d="⚡ HOSTNAME raspberrypi.local HAS BEEN CHANGED TO rpi0.local"
-else
-  d="⚡ HOSTNAME raspberrypi.local HAS NOT BEEN CHANGED"
-fi
+##============================================================
+## Install the supercool RASPAP project
+## This will only be installed for raspberry pi zero w
+##============================================================
+#COLOR=200
+#STR="$(cat /proc/device-tree/model)"
+#RPI0="Raspberry Pi Zero Rev"
+#RPI0W="Raspberry Pi Zero W Rev"
+#if case $STR in *$RPI0W*) true;; *) false;; esac; then
+#  h="⚡ INSTALL RASPAP"
+#  echo -e "\e[38;5;${COLOR}m${h}\e[0m";
+#  sudo raspi-config nonint do_wifi_country NL
+#  sudo curl -sL https://install.raspap.com | bash -s -- --yes
+#
+#  COLOR=200
+#  h="⚡ RASPAP POST-CONFIGURATION FOR ENABLING SIMULTANEOUS AP & CLIENT CONFIG"
+#  echo -e "\e[38;5;${COLOR}m${h}\e[0m";
+#  ## Set managed mode (WifiAPEnable = 1)
+#  COLOR=212
+#  h="Enable managed mode in /etc/raspap/hostapd.ini"
+#  echo -e "\e[38;5;${COLOR}m${h}\e";
+#  sudo bash -c 'cat > /etc/raspap/hostapd.ini' << EOF
+#LogEnable = 0
+#WifiAPEnable = 1
+#WifiManaged = wlan0
+#EOF
+#
+#  ## Configure hostapd.conf
+#  echo "Configure /etc/hostapd/hostapd.conf (SSID: LeaTaka / PASSW: changeme)"
+#  sudo bash -c 'cat > /etc/hostapd/hostapd.conf' << EOF
+#driver=nl80211
+#ctrl_interface=/var/run/hostapd
+#ctrl_interface_group=0
+#auth_algs=1
+#wpa_key_mgmt=WPA-PSK
+#beacon_int=100
+#ssid=LeaTaka
+#channel=1
+#hw_mode=g
+#ieee80211n=0
+#wpa_passphrase=changeme
+#interface=uap0
+#wpa=3
+#wpa_pairwise=TKIP CCMP
+#country_code=NL
+#ignore_broadcast_ssid=0
+#max_num_sta=5
+#EOF
+#
+#  ## Configure dnsmasq
+#  echo "Configure /etc/dnsmasq.conf"
+#  sudo bash -c 'cat > /etc/dnsmasq.conf' << EOF
+#interface=lo,uap0               # Enable uap0 interface for wireless client AP mode
+#bind-interfaces                 # Bind to the interfaces
+#server=8.8.8.8                  # Forward DNS requests to Google DNS
+#domain-needed                   # Don't forward short names
+#bogus-priv                      # Never forward addresses in the non-routed address spaces
+#dhcp-range=10.3.141.50,10.3.141.255,255.255.255.0,12h
+#EOF
+#
+#  ## Configure dhcpcd.conf
+#  echo "Configure /etc/dhcpcd.conf"
+#  sudo bash -c 'cat > /etc/dhcpcd.conf' << EOF
+## RaspAP uap0 configuration
+#interface uap0
+#static ip_address=192.168.50.1/24
+#nohook wpa_supplicant
+#EOF
+#
+#  ## Set webgui password to (changeme)
+#  echo "Set webgui password to: changeme"
+#  sudo bash -c 'cat > /etc/raspap/raspap.auth' << EOF
+#admin
+#\$2y\$10\$DxxAsfJQMxjzk/Erg6ay1O/k75b19279D4EW/YUesWyyPrMNEoaMa
+#EOF
+#  ## Set WifiClient list as default PHP page
+#  echo "Set wifi client list as default PHP page"
+#  sudo sed -z 's|default:\n\t\tDisplayDashboard|default:\n\t\tDisplayWPAConfig|' -i /var/www/html/index.php
+#
+#  ## Set new hostname for Pi Zero W
+#  sudo raspi-config nonint do_hostname rpi0w
+#  d="⚡ HOSTNAME raspberrypi.local HAS BEEN CHANGED TO rpi0w.local"
+#  echo -e "\e[38;5;${COLOR}m${h}\e[0m";
+#elif case $STR in *$RPI0*) true;; *) false;; esac; then
+#  ## Set new hostname for Pi Zero
+#  sudo raspi-config nonint do_hostname rpi0
+#  d="⚡ HOSTNAME raspberrypi.local HAS BEEN CHANGED TO rpi0.local"
+#else
+#  d="⚡ HOSTNAME raspberrypi.local HAS NOT BEEN CHANGED"
+#fi
 #============================================================
 # INSTALL SERVICES
 #============================================================

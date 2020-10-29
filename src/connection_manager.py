@@ -1,7 +1,6 @@
 from src import apa102
 from src.uv4l import Uv4l
 from src.janus import Janus
-from src.cfg import Cfg
 
 
 class ConnectionManager:
