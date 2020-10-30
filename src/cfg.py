@@ -11,8 +11,8 @@ class Cfg:
     URL_JANUS = "https://www.jasconcept.com:8089/janus"
     HEADERS = {'Content-type': 'application/json'}
 
-    TRANSACTION_ID = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(40))
-    FEED_ID = ''.join(filter(str.isdigit, TRANSACTION_ID))
+    TRANSACTION_ID = None
+    FEED_ID = None
     SESSION_ID = None
     PLUGIN_ID = None
     TEMPERATURE = False
@@ -25,6 +25,10 @@ class Cfg:
 
     room = None
     pin = None
+
+    def set_transaction_id(self):
+        self.TRANSACTION_ID = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(40))
+        self.FEED_ID = ''.join(filter(str.isdigit, self.TRANSACTION_ID))
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # UV4L SETTING                                                                                          #

@@ -73,9 +73,8 @@ class Uv4l:
         result = json.loads(response.content.decode('ascii'))
         print('Uv4l settings   = {0}'.format(result["response"]["reason"]))
 
-
-
     def session_start(self):
+        self.cfg.set_transaction_id()
         response = requests.post(
             self.cfg.URL_UV4L,
             headers=self.cfg.HEADERS,
