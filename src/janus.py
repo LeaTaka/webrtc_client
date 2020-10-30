@@ -86,6 +86,8 @@ class Janus:
             else:
                 print('Unpublish media = {0}'.format(result["janus"]))
             self.destroy_room()
+            self.uv4l.cfg.room = None
+            self.uv4l.cfg.pin = None
             self.status = "disabled"
 
             # set s_streaming to False with output: no streaming sessions active and back to ready for start_processes()
