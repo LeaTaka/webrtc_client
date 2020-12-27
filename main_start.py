@@ -4,11 +4,13 @@ from time import sleep
 
 import RPi.GPIO as GPIO
 from src import utils
+from src.cfg import Cfg
 from src.connection_manager import ConnectionManager
 from src.button import Button
 
 button = Button()
-connection_manager = ConnectionManager()
+cfg = Cfg()
+connection_manager = ConnectionManager(cfg)
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)

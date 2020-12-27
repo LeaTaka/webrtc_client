@@ -4,17 +4,23 @@ from src.janus import Janus
 
 
 class ConnectionManager:
-    recover = None
 
-    uv4l = Uv4l()
-    janus = Janus()
+    recover = None
+    uv4l = None
+    janus = None
+    cfg = None
+
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.uv4l = Uv4l(cfg)
+        self.janus = Janus(cfg)
 
     def ensure_status(self, status, internet):
 
         # print(f"internet: {internet}, uv4l: {self.dummy_uv4l.status}, janus: {self.dummy_janus.status}")
 
         if self.recover and internet:
-            print(f"recovering with room: {str(self.uv4l.cfg.room)}")
+            print(f"recovering with room: {str(self.cfg.room)}")
             self.uv4l.setup()
             self.janus.join_room()
             self.uv4l.subscribe_media()

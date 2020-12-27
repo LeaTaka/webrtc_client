@@ -6,16 +6,18 @@ import sys
 from time import sleep
 import requests.packages.urllib3
 from src import apa102, utils
-from src.cfg import Cfg
 
 requests.packages.urllib3.disable_warnings()
 os.chdir(os.path.join('/home/pi/webrtc_client/'))
 
 
 class Uv4l:
-    cfg = Cfg()
     initial_status = "disabled"
     status = initial_status
+    cfg = None
+
+    def __init__(self, cfg):
+        self.cfg = cfg
 
     def setup(self):
         i = 1
